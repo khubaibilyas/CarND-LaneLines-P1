@@ -21,7 +21,7 @@ I found several shortcoming while tuning hyperparameters. I logged them as failC
 
 1) Objects closer to the lane (such as cars) couldn't be trimmed by Canny Edge Transform and they were identified as lines in the hough transform. So I implemented a slope filter to remove these lines.
 2) Increasing the maxLineGap caused lines to be formed between the two edges of the same lane such as this : 
-![Problem with increasing maxLineGap](./examples/problematicScenario1.jpg)
+![Problem with increasing maxLineGap](examples/problematicScenario1.jpg)
 I took the hint from a stackoverflow thread to increase minLineLength as much as we want and to decrease maxLineGap as much as we can in order to get "true" lines from the transform. 
 3) Finding the average slope and intercept was extremely sensitive to vanishing lane images. So I tried to use the nearest lane marking to extrapolate. This increase sensitivity even worse that once the nearest lane marking crossed, the lines shifted by a huge margin taking the furthest marking as reference. I was able to tweak the Hough parameters to make the average extrapolation stable.
 4) The other shortcoming is obviously evident in the challenge.mp4. The algo doesn't work for curved lines and fixed vertices. Changing the sides of the vertices based on lanes from previous images can help resolve this problem.
