@@ -1,56 +1,32 @@
 # **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
-
-Overview
----
-
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
-
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+### Reflection
 
-1. Describe the pipeline
+My pipeline consists of the following steps : 
+1) Convert the image to grayscale.
+2) Find Canny Edge transform of the image.
+3) Identify the region of interest with respect to the car using a trapezoidal quadrilateral of fixed vertices.
+4) Apply hough transform to the image and identify lines.
+5) Filter and remove lines with slope between 0.5 and -0.5 as they are remnants of irrelevant edges from Canny transform.
+6) Seperate the remaining lines into positiveLines and negativeLines corresponding to their slopes.
+7) Find the average slope and average x-coordinate of the intercept to the bottom of the image.
+8) Find the x intercept to the top of the vertice taking average slope and average bottom intercept as reference. Extrapolate this line seperately for positiveLines and negativeLines.
 
-2. Identify any shortcomings
+Steps 6-8 are implemented in the draw_lines() function. HyperParameters for Canny Edge Detection, HoughTransform are determined using a visual tool I developed using tkinter which can be found at the last section of the notebook.
 
-3. Suggest possible improvements
+### 2. Potential Shortcomings with my pipeline
 
-We encourage using images in your writeup to demonstrate how your pipeline works.  
+I found several shortcoming while tuning hyperparameters. I logged them as failCase scenarios to analyse. Some of them are : 
 
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
+1) Objects closer to the lane (such as cars) couldn't be trimmed by Canny Edge Transform and they were identified as lines in the hough transform. So I implemented a slope filter to remove these lines.
+2) Increasing the maxLineGap caused lines to be formed between the two edges of the same lane such as this : 
+![Problem with increasing maxLineGap](test_images/problematicScenario1.JPG)
+I took the hint from a stackoverflow thread to increase minLineLength as much as we want and to decrease maxLineGap as much as we can in order to get "true" lines from the transform. 
+3) Finding the average slope and intercept was extremely sensitive to vanishing lane images. So I tried to use the nearest lane marking to extrapolate. This increase sensitivity even worse that once the nearest lane marking crossed, the lines shifted by a huge margin taking the furthest marking as reference. I was able to tweak the Hough parameters to make the average extrapolation stable.
+4) The other shortcoming is obviously evident in the challenge.mp4. The algo doesn't work for curved lines and fixed vertices. Changing the sides of the vertices based on lanes from previous images can help resolve this problem.
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
 
+### 3. Possible improvement to my pipeline
 
-The Project
----
-
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
-
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) if you haven't already.
-
-**Step 2:** Open the code in a Jupyter Notebook
-
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
-
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
-
-`> jupyter notebook`
-
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
-
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+A possible improvement would be to make vertice edges dynamic. And using a transform that converts points to a parabolic (or a similiar curve equation) space could also work.
